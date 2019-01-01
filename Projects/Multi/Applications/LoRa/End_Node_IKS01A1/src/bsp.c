@@ -100,6 +100,12 @@ SensorAxesRaw_t ACCELERO_Value_Raw;
 SensorAxes_t ACCELERO_Value;
 SensorAxes_t GYRO_Value;
 
+void BSP_Magneto_sensor_Read( void )
+{
+	BSP_MAGNETO_Get_AxesRaw(MAGNETO_handle, &MAGNETO_Value_Raw);
+	BSP_ACCELERO_Get_AxesRaw(ACCELERO_handle, &ACCELERO_Value_Raw);
+}
+
 void BSP_sensor_Read( sensor_t *sensor_data)
 {
   /* USER CODE BEGIN 5 */
@@ -111,8 +117,6 @@ void BSP_sensor_Read( sensor_t *sensor_data)
   BSP_HUMIDITY_Get_Hum(HUMIDITY_handle, &HUMIDITY_Value);
   BSP_TEMPERATURE_Get_Temp(TEMPERATURE_handle, &TEMPERATURE_Value);
   BSP_PRESSURE_Get_Press(PRESSURE_handle, &PRESSURE_Value);
-	BSP_MAGNETO_Get_AxesRaw(MAGNETO_handle, &MAGNETO_Value_Raw);
-	BSP_ACCELERO_Get_AxesRaw(ACCELERO_handle, &ACCELERO_Value_Raw);
 	BSP_ACCELERO_Get_Axes(ACCELERO_handle, &ACCELERO_Value);
 	BSP_GYRO_Get_Axes(GYRO_handle, &GYRO_Value);
 #endif  

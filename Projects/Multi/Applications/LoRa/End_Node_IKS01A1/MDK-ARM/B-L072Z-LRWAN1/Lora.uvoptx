@@ -153,32 +153,22 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ACCELERO_Value,0x0A</ItemText>
+          <ItemText>HEADING</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GYRO_Value,0x0A</ItemText>
+          <ItemText>TEMP_VALUE</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TEMP_VALUE</ItemText>
+          <ItemText>PRESSURE_VALUE</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>PRESSURE_VALUE</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>1</WinNumber>
           <ItemText>HUMIDITY_VALUE</ItemText>
-        </Ww>
-        <Ww>
-          <count>5</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>HEADING</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

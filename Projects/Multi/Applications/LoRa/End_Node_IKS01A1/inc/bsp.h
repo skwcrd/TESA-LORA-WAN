@@ -101,6 +101,14 @@ void  BSP_sensor_Init( void  );
  */
 void BSP_sensor_Read( sensor_t *sensor_data);
 
+/**
+ * @brief  sensor  read. 
+ *
+ * @note none
+ * @retval magneto_sensor_data
+ */
+void BSP_Magneto_sensor_Read( void );
+
 #ifdef __cplusplus
 }
 #endif

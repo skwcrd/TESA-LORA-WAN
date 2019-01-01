@@ -56,6 +56,9 @@
 #include "sensor.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
 #define MAG_LPF_FACTOR  0.4f
 #define ACC_LPF_FACTOR  0.1f
 /*!
@@ -76,7 +79,7 @@
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            1000
+#define APP_TX_DUTYCYCLE                            30000
 /*!
  * LoRaWAN Adaptive Data Rate
  * @note Please note that when ADR is enabled the end-device should be static
@@ -105,6 +108,10 @@
  */
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64
 /*!
+ * Defines the magneto data transmission duty cycle. 5s, value in [ms].
+ */
+#define MAG_DUTYCYCLE                            1000
+/*!
  * User application data
  */
 static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
@@ -127,7 +134,10 @@ static void LORA_ConfirmClass ( DeviceClass_t Class );
 
 /* call back when server needs endNode to send a frame*/
 static void LORA_TxNeeded ( void );
-	
+
+/* calculate heading from magneto value*/
+static void Cal_Heading( void );
+
 /* LoRa endNode send request*/
 static void Send( void );
 
@@ -136,6 +146,9 @@ static void LoraStartTx(TxEventType_t EventType);
 
 /* tx timer callback function*/
 static void OnTxTimerEvent( void );
+
+/* megneto timer callback function*/
+static void OnMagTimerEvent( void );
 
 /* Private variables ---------------------------------------------------------*/
 /* load Main call backs structure*/
@@ -154,6 +167,7 @@ static LoRaMainCallback_t LoRaMainCallbacks = { HW_GetBatteryLevel,
 static uint8_t AppLedStateOn = RESET;
                                                
 static TimerEvent_t TxTimer;
+static TimerEvent_t MagTimer;
 
 #ifdef USE_B_L072Z_LRWAN1
 /*!
@@ -176,8 +190,8 @@ extern SensorAxesRaw_t ACCELERO_Value_Raw;
 extern SensorAxes_t ACCELERO_Value;
 extern SensorAxes_t GYRO_Value;
 
-SensorAxesRaw_t MAG_MIN = { 0, 0, 0 };
-SensorAxesRaw_t MAG_MAX = { 0, 0, 0 };
+SensorAxesRaw_t MAG_MIN = { 0XFE64, 0XE43B, 0 };
+SensorAxesRaw_t MAG_MAX = { 0X1987, 0, 0X1774 };
 SensorAxesRaw_t MAGNETO_Value_Old 	= { 0, 0, 0 };
 SensorAxesRaw_t ACCELERO_Value_Old 	= { 0, 0, 0 };
 																			
@@ -244,54 +258,13 @@ static void LORA_HasJoined( void )
   LORA_RequestClass( LORAWAN_DEFAULT_CLASS );
 }
 
-static void Send( void )
+static void Cal_Heading( void )
 {
-  /* USER CODE BEGIN 3 */
-  uint16_t 	pressure 		= 0;
-  int16_t 	temperature = 0;
-  uint16_t 	humidity 		= 0;
-	int16_t 	magneto 		= 0;
-	int32_t 	latitude 		= 0;
-	int32_t 	longitude 	= 0;
-	int32_t 	altitude 		= 0;
 	float MAG_X_Comp, MAG_Y_Comp, ACC_X_Norm, ACC_Y_Norm, pitch, roll;
 	SensorAxesRaw_t magnetos 	= { 0, 0, 0 };
 	SensorAxesRaw_t accelero 	= { 0, 0, 0 };
-	SensorAxesRaw_t gyro 			= { 0, 0, 0 };
-  uint8_t batteryLevel;
-  sensor_t sensor_data;
-  
-  if ( LORA_JoinStatus () != LORA_SET)
-  {
-    /*Not joined, try again later*/
-    LORA_Join();
-    return;
-  }
-  
-  DBG_PRINTF("SEND REQUEST\n\r");
-#ifndef CAYENNE_LPP
-  int32_t latitude, longitude = 0;
-  uint16_t altitudeGps = 0;
-#endif
-  
-#ifdef USE_B_L072Z_LRWAN1
-  TimerInit( &TxLedTimer, OnTimerLedEvent );
-  TimerSetValue(  &TxLedTimer, 200);
-  LED_On( LED_RED1 ) ; 
-  TimerStart( &TxLedTimer );  
-#endif
-
-  BSP_sensor_Read( &sensor_data );
 	
-	TEMP_VALUE 			= sensor_data.temperature;
-	PRESSURE_VALUE 	= sensor_data.pressure;
-	HUMIDITY_VALUE 	= sensor_data.humidity;
-
-#ifdef CAYENNE_LPP
-  uint8_t cchannel=0;
-  temperature 			= ( int16_t )( TEMP_VALUE * 10 );     				/* in °C * 10 */
-  pressure    			= ( uint16_t )( PRESSURE_VALUE * 100 / 10 );  /* in hPa / 10 */
-  humidity    			= ( uint16_t )( HUMIDITY_VALUE * 2 );        	/* in %*2     */
+	BSP_Magneto_sensor_Read();
 	
 	// Calculator Heading
 	if ( MAGNETO_Value_Raw.AXIS_X < MAG_MIN.AXIS_X ) {
@@ -339,6 +312,64 @@ static void Send( void )
 	
 	HEADING			= ( 180.0 * atan2( MAG_Y_Comp, MAG_X_Comp ) / M_PI );
 	
+	if ( ( HEADING <= -180.0 ) || ( HEADING >= 180.0 ) ) {
+		HEADING = 0.0;
+	}
+	else if ( ( HEADING > -180.0 ) && ( HEADING < 0.0 ) ) {
+		HEADING = 180 + HEADING;
+	}
+	else if ( ( HEADING < 180.0 ) && ( HEADING >= 0.0 ) ) {
+		HEADING = -( 180 - HEADING );
+	}
+}
+
+static void Send( void )
+{
+  /* USER CODE BEGIN 3 */
+  uint16_t 	pressure 		= 0;
+  int16_t 	temperature = 0;
+  uint16_t 	humidity 		= 0;
+	int16_t 	magneto 		= 0;
+	/*int32_t 	latitude 		= 0;
+	int32_t 	longitude 	= 0;
+	int32_t 	altitude 		= 0;*/
+	SensorAxesRaw_t accelero 	= { 0, 0, 0 };
+	SensorAxesRaw_t gyro 			= { 0, 0, 0 };
+  uint8_t batteryLevel;
+  sensor_t sensor_data;
+  
+  if ( LORA_JoinStatus () != LORA_SET)
+  {
+    /*Not joined, try again later*/
+    LORA_Join();
+    return;
+  }
+  
+  DBG_PRINTF("SEND REQUEST\n\r");
+#ifndef CAYENNE_LPP
+  int32_t latitude, longitude = 0;
+  uint16_t altitudeGps = 0;
+#endif
+  
+#ifdef USE_B_L072Z_LRWAN1
+  TimerInit( &TxLedTimer, OnTimerLedEvent );
+  TimerSetValue(  &TxLedTimer, 200);
+  LED_On( LED_RED1 ) ; 
+  TimerStart( &TxLedTimer );  
+#endif
+
+  BSP_sensor_Read( &sensor_data );
+	
+	TEMP_VALUE 			= sensor_data.temperature;
+	PRESSURE_VALUE 	= sensor_data.pressure;
+	HUMIDITY_VALUE 	= sensor_data.humidity;
+
+#ifdef CAYENNE_LPP
+  uint8_t cchannel=0;
+  temperature 			= ( int16_t )( TEMP_VALUE * 10 );     				/* in °C * 10 */
+  pressure    			= ( uint16_t )( PRESSURE_VALUE * 100 / 10 );  /* in hPa / 10 */
+  humidity    			= ( uint16_t )( HUMIDITY_VALUE * 2 );        	/* in %*2     */
+	
 	// ACCELERO value from ACCELERO SENSOR to CAYENNE_LPP
 	accelero.AXIS_X 	= ( int16_t )( ACCELERO_Value.AXIS_X  * 1000 );
 	accelero.AXIS_Y 	= ( int16_t )( ACCELERO_Value.AXIS_Y  * 1000 );
@@ -348,9 +379,10 @@ static void Send( void )
 	gyro.AXIS_Y 			= ( int16_t )( GYRO_Value.AXIS_Y  * 100 );
 	gyro.AXIS_Z 			= ( int16_t )( GYRO_Value.AXIS_Z  * 100 );
 	// GPS value to CAYENNE_LPP
-	latitude 					= ( int32_t )( sensor_data.latitude * 10000 );
+	/*latitude 					= ( int32_t )( sensor_data.latitude * 10000 );
 	longitude 				= ( int32_t )( sensor_data.longitude * 10000 );
-	altitude 					= ( int32_t )( sensor_data.altitudeGps * 100 );		/* in m */
+	altitude 					= ( int32_t )( sensor_data.altitudeGps * 100 );*/		/* in m */
+	
 	// HEADING value from MAGNETO SENSOR to CAYENNE_LPP
 	magneto 					= ( int16_t )( HEADING * 100 );
 	
@@ -400,7 +432,7 @@ static void Send( void )
   AppData.Buff[i++] = gyro.AXIS_Z & 0xFF;
 	
 	// GPS
-	AppData.Buff[i++] = cchannel++;
+	/*AppData.Buff[i++] = cchannel++;
 	AppData.Buff[i++] = LPP_DATATYPE_GPS;
 	AppData.Buff[i++] = ( latitude >> 16 ) & 0xFF;
   AppData.Buff[i++] = ( latitude >> 8 ) & 0xFF;
@@ -410,7 +442,7 @@ static void Send( void )
   AppData.Buff[i++] = longitude & 0xFF;
 	AppData.Buff[i++] = ( altitude >> 16 ) & 0xFF;
 	AppData.Buff[i++] = ( altitude >> 8 ) & 0xFF;
-  AppData.Buff[i++] = altitude & 0xFF;
+  AppData.Buff[i++] = altitude & 0xFF;*/
 	
 	// ANALOG MAGNETO SENSOR : send value range -180 to 180 degree, North is zero degree.
 	AppData.Buff[i++] = cchannel++;
@@ -558,13 +590,23 @@ static void OnTxTimerEvent( void )
   TimerStart( &TxTimer);
 }
 
+static void OnMagTimerEvent( void )
+{
+  Cal_Heading( );
+  /*Wait for next tx slot*/
+  TimerStart( &MagTimer);
+}
+
 static void LoraStartTx(TxEventType_t EventType)
 {
   if (EventType == TX_ON_TIMER)
   {
     /* send everytime timer elapses */
     TimerInit( &TxTimer, OnTxTimerEvent );
-    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE); 
+		TimerInit( &MagTimer, OnMagTimerEvent );
+    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE);
+		TimerSetValue( &MagTimer,  MAG_DUTYCYCLE);
+		OnMagTimerEvent();
     OnTxTimerEvent();
   }
   else
