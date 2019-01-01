@@ -110,7 +110,7 @@
 /*!
  * Defines the magneto data transmission duty cycle. 5s, value in [ms].
  */
-#define MAG_DUTYCYCLE                            1000
+#define MAG_DUTYCYCLE                            		1000
 /*!
  * User application data
  */
