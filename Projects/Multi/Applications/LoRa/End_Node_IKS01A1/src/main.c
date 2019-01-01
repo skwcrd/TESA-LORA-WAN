@@ -56,7 +56,8 @@
 #include "sensor.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-
+#define MAG_LPF_FACTOR  0.4f
+#define ACC_LPF_FACTOR  0.1f
 /*!
  * CAYENNE_LPP is myDevices Application server.
  */
@@ -75,17 +76,17 @@
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            10000
+#define APP_TX_DUTYCYCLE                            1000
 /*!
  * LoRaWAN Adaptive Data Rate
  * @note Please note that when ADR is enabled the end-device should be static
  */
-#define LORAWAN_ADR_STATE LORAWAN_ADR_ON
+#define LORAWAN_ADR_STATE 													LORAWAN_ADR_ON
 /*!
  * LoRaWAN Default data Rate Data Rate
  * @note Please note that LORAWAN_DEFAULT_DATA_RATE is used only when ADR is disabled 
  */
-#define LORAWAN_DEFAULT_DATA_RATE DR_0
+#define LORAWAN_DEFAULT_DATA_RATE 									DR_0
 /*!
  * LoRaWAN application port
  * @note do not use 224. It is reserved for certification
@@ -169,9 +170,17 @@ static  LoRaParam_t LoRaParamInit = { LORAWAN_ADR_STATE,
 																			LORAWAN_PUBLIC_NETWORK };
 
 /* Private functions ---------------------------------------------------------*/
-extern SensorAxes_t MAGNETO_Value;
+
+extern SensorAxesRaw_t MAGNETO_Value_Raw;
+extern SensorAxesRaw_t ACCELERO_Value_Raw;
 extern SensorAxes_t ACCELERO_Value;
 extern SensorAxes_t GYRO_Value;
+
+SensorAxesRaw_t MAG_MIN = { 0, 0, 0 };
+SensorAxesRaw_t MAG_MAX = { 0, 0, 0 };
+SensorAxesRaw_t MAGNETO_Value_Old 	= { 0, 0, 0 };
+SensorAxesRaw_t ACCELERO_Value_Old 	= { 0, 0, 0 };
+																			
 float HEADING;
 float TEMP_VALUE;
 float PRESSURE_VALUE;
@@ -245,6 +254,8 @@ static void Send( void )
 	int32_t 	latitude 		= 0;
 	int32_t 	longitude 	= 0;
 	int32_t 	altitude 		= 0;
+	float MAG_X_Comp, MAG_Y_Comp, ACC_X_Norm, ACC_Y_Norm, pitch, roll;
+	SensorAxesRaw_t magnetos 	= { 0, 0, 0 };
 	SensorAxesRaw_t accelero 	= { 0, 0, 0 };
 	SensorAxesRaw_t gyro 			= { 0, 0, 0 };
   uint8_t batteryLevel;
@@ -275,13 +286,59 @@ static void Send( void )
 	TEMP_VALUE 			= sensor_data.temperature;
 	PRESSURE_VALUE 	= sensor_data.pressure;
 	HUMIDITY_VALUE 	= sensor_data.humidity;
-	HEADING					= 0;
 
 #ifdef CAYENNE_LPP
   uint8_t cchannel=0;
   temperature 			= ( int16_t )( TEMP_VALUE * 10 );     				/* in °C * 10 */
   pressure    			= ( uint16_t )( PRESSURE_VALUE * 100 / 10 );  /* in hPa / 10 */
   humidity    			= ( uint16_t )( HUMIDITY_VALUE * 2 );        	/* in %*2     */
+	
+	// Calculator Heading
+	if ( MAGNETO_Value_Raw.AXIS_X < MAG_MIN.AXIS_X ) {
+		MAG_MIN.AXIS_X = MAGNETO_Value_Raw.AXIS_X;
+	}
+	if ( MAGNETO_Value_Raw.AXIS_Y < MAG_MIN.AXIS_Y ) {
+		MAG_MIN.AXIS_Y = MAGNETO_Value_Raw.AXIS_Y;
+	}
+	if ( MAGNETO_Value_Raw.AXIS_Z < MAG_MIN.AXIS_Z ) {
+		MAG_MIN.AXIS_Z = MAGNETO_Value_Raw.AXIS_Z;
+	}
+	if ( MAGNETO_Value_Raw.AXIS_X > MAG_MAX.AXIS_X ) {
+		MAG_MAX.AXIS_X = MAGNETO_Value_Raw.AXIS_X;
+	}
+	if ( MAGNETO_Value_Raw.AXIS_Y > MAG_MAX.AXIS_Y ) {
+		MAG_MAX.AXIS_Y = MAGNETO_Value_Raw.AXIS_Y;
+	}
+	if ( MAGNETO_Value_Raw.AXIS_Z > MAG_MAX.AXIS_Z ) {
+		MAG_MAX.AXIS_Z = MAGNETO_Value_Raw.AXIS_Z;
+	}
+	
+	magnetos.AXIS_X = ( MAGNETO_Value_Raw.AXIS_X * MAG_LPF_FACTOR + MAGNETO_Value_Old.AXIS_X * ( 1 - MAG_LPF_FACTOR ) );
+	magnetos.AXIS_Y = ( MAGNETO_Value_Raw.AXIS_Y * MAG_LPF_FACTOR + MAGNETO_Value_Old.AXIS_Y * ( 1 - MAG_LPF_FACTOR ) );
+	magnetos.AXIS_Z = ( MAGNETO_Value_Raw.AXIS_Z * MAG_LPF_FACTOR + MAGNETO_Value_Old.AXIS_Z * ( 1 - MAG_LPF_FACTOR ) );
+	
+	accelero.AXIS_X = ( ACCELERO_Value_Raw.AXIS_X * ACC_LPF_FACTOR + ACCELERO_Value_Old.AXIS_X * ( 1 - ACC_LPF_FACTOR ) );
+	accelero.AXIS_Y = ( ACCELERO_Value_Raw.AXIS_Y * ACC_LPF_FACTOR + ACCELERO_Value_Old.AXIS_Y * ( 1 - ACC_LPF_FACTOR ) );
+	accelero.AXIS_Z = ( ACCELERO_Value_Raw.AXIS_Z * ACC_LPF_FACTOR + ACCELERO_Value_Old.AXIS_Z * ( 1 - ACC_LPF_FACTOR ) );
+	
+	MAGNETO_Value_Old 	= magnetos;
+	ACCELERO_Value_Old 	= accelero;
+	
+	magnetos.AXIS_X -= ( ( MAG_MIN.AXIS_X + MAG_MAX.AXIS_X ) / 2 );
+	magnetos.AXIS_Y -= ( ( MAG_MIN.AXIS_Y + MAG_MAX.AXIS_Y ) / 2 );
+	magnetos.AXIS_Z -= ( ( MAG_MIN.AXIS_Z + MAG_MAX.AXIS_Z ) / 2 );
+	
+	ACC_X_Norm = ( accelero.AXIS_X / sqrt( accelero.AXIS_X * accelero.AXIS_X + accelero.AXIS_Y * accelero.AXIS_Y + accelero.AXIS_Z * accelero.AXIS_Z ) );
+	ACC_Y_Norm = ( accelero.AXIS_Y / sqrt( accelero.AXIS_X * accelero.AXIS_X + accelero.AXIS_Y * accelero.AXIS_Y + accelero.AXIS_Z * accelero.AXIS_Z ) );
+	
+	pitch = ( asin( ACC_X_Norm ) );
+	roll 	= ( -asin( ACC_Y_Norm / cos( pitch ) ) );
+	
+	MAG_X_Comp 	= ( magnetos.AXIS_X * cos( pitch ) + magnetos.AXIS_Z * sin( pitch ) );
+	MAG_Y_Comp 	= ( magnetos.AXIS_X * sin( roll ) * sin( pitch ) + magnetos.AXIS_Y * cos( roll ) + magnetos.AXIS_Z * sin( roll ) * cos( pitch ) );
+	
+	HEADING			= ( 180.0 * atan2( MAG_Y_Comp, MAG_X_Comp ) / M_PI );
+	
 	// ACCELERO value from ACCELERO SENSOR to CAYENNE_LPP
 	accelero.AXIS_X 	= ( int16_t )( ACCELERO_Value.AXIS_X  * 1000 );
 	accelero.AXIS_Y 	= ( int16_t )( ACCELERO_Value.AXIS_Y  * 1000 );
