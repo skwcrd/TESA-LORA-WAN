@@ -103,7 +103,7 @@ void HW_GPIO_Init( GPIO_TypeDef* port, uint16_t GPIO_Pin, GPIO_InitTypeDef* init
  * @param [IN] irqHandler  points to the  function to execute
  * @retval none
  */
-void HW_GPIO_SetIrq( GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t prio,  GpioIrqHandler *irqHandler )
+void HW_GPIO_SetIrq( GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t prio, GpioIrqHandler *irqHandler )
 {
   IRQn_Type IRQnb;
   

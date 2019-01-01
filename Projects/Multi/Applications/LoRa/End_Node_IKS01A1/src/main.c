@@ -77,7 +77,7 @@
 #define LPP_DATATYPE_GPS    				0x88
 #define LPP_APP_PORT 								99
 /*!
- * Defines the application data transmission duty cycle. 5s, value in [ms].
+ * Defines the application data transmission duty cycle. 30s, value in [ms].
  */
 #define APP_TX_DUTYCYCLE                            30000
 /*!
@@ -108,7 +108,7 @@
  */
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64
 /*!
- * Defines the magneto data transmission duty cycle. 5s, value in [ms].
+ * Defines the magneto data transmission duty cycle. 1s, value in [ms].
  */
 #define MAG_DUTYCYCLE                            		1000
 /*!
@@ -124,7 +124,7 @@ static lora_AppData_t AppData = { AppDataBuff, 0, 0 };
 /* Private function prototypes -----------------------------------------------*/
 
 /* call back when LoRa endNode has received a frame*/
-static void LORA_RxData( lora_AppData_t *AppData);
+static void LORA_RxData( lora_AppData_t *AppData );
 
 /* call back when LoRa endNode has just joined*/
 static void LORA_HasJoined( void );
@@ -142,7 +142,7 @@ static void Cal_Heading( void );
 static void Send( void );
 
 /* start the tx process*/
-static void LoraStartTx(TxEventType_t EventType);
+static void LoraStartTx( TxEventType_t EventType );
 
 /* tx timer callback function*/
 static void OnTxTimerEvent( void );
@@ -353,9 +353,9 @@ static void Send( void )
   
 #ifdef USE_B_L072Z_LRWAN1
   TimerInit( &TxLedTimer, OnTimerLedEvent );
-  TimerSetValue(  &TxLedTimer, 200);
-  LED_On( LED_RED1 ) ; 
-  TimerStart( &TxLedTimer );  
+  TimerSetValue( &TxLedTimer, 200 );
+  LED_On( LED_RED1 );
+  TimerStart( &TxLedTimer );
 #endif
 
   BSP_sensor_Read( &sensor_data );
@@ -366,7 +366,7 @@ static void Send( void )
 
 #ifdef CAYENNE_LPP
   uint8_t cchannel=0;
-  temperature 			= ( int16_t )( TEMP_VALUE * 10 );     				/* in °C * 10 */
+  temperature 			= ( int16_t )( TEMP_VALUE * 10 );     				/* in ï¿½C * 10 */
   pressure    			= ( uint16_t )( PRESSURE_VALUE * 100 / 10 );  /* in hPa / 10 */
   humidity    			= ( uint16_t )( HUMIDITY_VALUE * 2 );        	/* in %*2     */
 	
@@ -462,7 +462,7 @@ static void Send( void )
 #endif  /* REGION_XX915 */
 #else  /* not CAYENNE_LPP */
 
-  temperature = ( int16_t )( sensor_data.temperature * 100 );     /* in °C * 100 */
+  temperature = ( int16_t )( sensor_data.temperature * 100 );     /* in ï¿½C * 100 */
   pressure    = ( uint16_t )( sensor_data.pressure * 100 / 10 );  /* in hPa / 10 */
   humidity    = ( uint16_t )( sensor_data.humidity * 10 );        /* in %*10     */
   latitude = sensor_data.latitude;
@@ -527,17 +527,17 @@ static void LORA_RxData( lora_AppData_t *AppData )
       {
         case 0:
         {
-          LORA_RequestClass(CLASS_A);
+          LORA_RequestClass( CLASS_A );
           break;
         }
         case 1:
         {
-          LORA_RequestClass(CLASS_B);
+          LORA_RequestClass( CLASS_B );
           break;
         }
         case 2:
         {
-          LORA_RequestClass(CLASS_C);
+          LORA_RequestClass( CLASS_C );
           break;
         }
         default:
@@ -545,7 +545,9 @@ static void LORA_RxData( lora_AppData_t *AppData )
       }
     }
     break;
+
     case LORAWAN_APP_PORT:
+
     if( AppData->BuffSize == 1 )
     {
       AppLedStateOn = AppData->Buff[0] & 0x01;
@@ -561,8 +563,8 @@ static void LORA_RxData( lora_AppData_t *AppData )
       }
     }
     break;
-  case LPP_APP_PORT:
-  {
+
+    case LPP_APP_PORT:
     AppLedStateOn= (AppData->Buff[2] == 100) ?  0x01 : 0x00;
     if ( AppLedStateOn == RESET )
     {
@@ -576,9 +578,9 @@ static void LORA_RxData( lora_AppData_t *AppData )
       LED_On( LED_BLUE ) ; 
     }
     break;
-  }
-  default:
-    break;
+
+    default:
+      break;
   }
   /* USER CODE END 4 */
 }
@@ -587,36 +589,36 @@ static void OnTxTimerEvent( void )
 {
   Send( );
   /*Wait for next tx slot*/
-  TimerStart( &TxTimer);
+  TimerStart( &TxTimer );
 }
 
 static void OnMagTimerEvent( void )
 {
   Cal_Heading( );
   /*Wait for next tx slot*/
-  TimerStart( &MagTimer);
+  TimerStart( &MagTimer );
 }
 
-static void LoraStartTx(TxEventType_t EventType)
+static void LoraStartTx( TxEventType_t EventType )
 {
-  if (EventType == TX_ON_TIMER)
+  if ( EventType == TX_ON_TIMER )
   {
     /* send everytime timer elapses */
     TimerInit( &TxTimer, OnTxTimerEvent );
 		TimerInit( &MagTimer, OnMagTimerEvent );
-    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE);
-		TimerSetValue( &MagTimer,  MAG_DUTYCYCLE);
-		OnMagTimerEvent();
-    OnTxTimerEvent();
+    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE );
+		TimerSetValue( &MagTimer,  MAG_DUTYCYCLE );
+		OnMagTimerEvent( );
+    OnTxTimerEvent( );
   }
   else
   {
     /* send everytime button is pushed */
-    GPIO_InitTypeDef initStruct={0};
+    GPIO_InitTypeDef initStruct = { 0 };
   
-    initStruct.Mode =GPIO_MODE_IT_RISING;
-    initStruct.Pull = GPIO_PULLUP;
-    initStruct.Speed = GPIO_SPEED_HIGH;
+    initStruct.Mode   = GPIO_MODE_IT_RISING;
+    initStruct.Pull   = GPIO_PULLUP;
+    initStruct.Speed  = GPIO_SPEED_HIGH;
 
     HW_GPIO_Init( USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, &initStruct );
     HW_GPIO_SetIrq( USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, 0, Send );
@@ -625,14 +627,14 @@ static void LoraStartTx(TxEventType_t EventType)
 
 static void LORA_ConfirmClass ( DeviceClass_t Class )
 {
-  PRINTF("switch to class %c done\n\r","ABC"[Class] );
+  PRINTF( "switch to class %c done\n\r","ABC"[Class] );
 
   /*Optionnal*/
   /*informs the server that switch has occurred ASAP*/
   AppData.BuffSize = 0;
   AppData.Port = LORAWAN_APP_PORT;
   
-  LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);
+  LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG );
 }
 
 static void LORA_TxNeeded ( void )
@@ -640,13 +642,13 @@ static void LORA_TxNeeded ( void )
   AppData.BuffSize = 0;
   AppData.Port = LORAWAN_APP_PORT;
   
-  LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);
+  LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG );
 }
 
 #ifdef USE_B_L072Z_LRWAN1
 static void OnTimerLedEvent( void )
 {
-  LED_Off( LED_RED1 ) ; 
+  LED_Off( LED_RED1 );
 }
 #endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
