@@ -520,64 +520,59 @@ static void LORA_RxData( lora_AppData_t *AppData )
   switch (AppData->Port)
   {
     case 3:
-    /*this port switches the class*/
-    if( AppData->BuffSize == 1 )
-    {
-      switch (  AppData->Buff[0] )
-      {
-        case 0:
-        {
-          LORA_RequestClass( CLASS_A );
-          break;
-        }
-        case 1:
-        {
-          LORA_RequestClass( CLASS_B );
-          break;
-        }
-        case 2:
-        {
-          LORA_RequestClass( CLASS_C );
-          break;
-        }
-        default:
-          break;
-      }
-    }
-    break;
+			/*this port switches the class*/
+			if( AppData->BuffSize == 1 )
+			{
+				switch (  AppData->Buff[0] )
+				{
+					case 0:
+						LORA_RequestClass( CLASS_A );
+						break;
+					
+					case 1:
+						LORA_RequestClass( CLASS_B );
+						break;
+					
+					case 2:
+						LORA_RequestClass( CLASS_C );
+						break;
+					
+					default:
+						break;
+				}
+			}
+			break;
 
     case LORAWAN_APP_PORT:
-
-    if( AppData->BuffSize == 1 )
-    {
-      AppLedStateOn = AppData->Buff[0] & 0x01;
-      if ( AppLedStateOn == RESET )
-      {
-        PRINTF("LED OFF\n\r");
-        LED_Off( LED_BLUE ) ; 
-      }
-      else
-      {
-        PRINTF("LED ON\n\r");
-        LED_On( LED_BLUE ) ; 
-      }
-    }
-    break;
+			if( AppData->BuffSize == 1 )
+			{
+				AppLedStateOn = AppData->Buff[0] & 0x01;
+				if ( AppLedStateOn == RESET )
+				{
+					PRINTF("LED OFF\n\r");
+					LED_Off( LED_BLUE ) ; 
+				}
+				else
+				{
+					PRINTF("LED ON\n\r");
+					LED_On( LED_BLUE ) ; 
+				}
+			}
+			break;
 
     case LPP_APP_PORT:
-    AppLedStateOn= (AppData->Buff[2] == 100) ?  0x01 : 0x00;
-    if ( AppLedStateOn == RESET )
-    {
-      PRINTF("LED OFF\n\r");
-      LED_Off( LED_BLUE ) ; 
-      
-    }
-    else
-    {
-      PRINTF("LED ON\n\r");
-      LED_On( LED_BLUE ) ; 
-    }
-    break;
+			AppLedStateOn = (AppData->Buff[2] == 100) ?  0x01 : 0x00;
+			if ( AppLedStateOn == RESET )
+			{
+				PRINTF("LED OFF\n\r");
+				LED_Off( LED_BLUE ) ;
+			}
+			else
+			{
+				PRINTF("LED ON\n\r");
+				LED_On( LED_BLUE ) ;
+			}
+			break;
 
     default:
       break;
@@ -606,8 +601,8 @@ static void LoraStartTx( TxEventType_t EventType )
     /* send everytime timer elapses */
     TimerInit( &TxTimer, OnTxTimerEvent );
 		TimerInit( &MagTimer, OnMagTimerEvent );
-    TimerSetValue( &TxTimer,  APP_TX_DUTYCYCLE );
-		TimerSetValue( &MagTimer,  MAG_DUTYCYCLE );
+    TimerSetValue( &TxTimer, APP_TX_DUTYCYCLE );
+		TimerSetValue( &MagTimer, MAG_DUTYCYCLE );
 		OnMagTimerEvent( );
     OnTxTimerEvent( );
   }

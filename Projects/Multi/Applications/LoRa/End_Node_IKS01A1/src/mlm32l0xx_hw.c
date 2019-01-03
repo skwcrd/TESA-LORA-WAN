@@ -135,6 +135,8 @@ void HW_Init( void )
     HW_SPI_Init( );
 
     HW_RTC_Init( );
+		
+		HW_GpioInit( );
     
     vcom_Init( );
     
