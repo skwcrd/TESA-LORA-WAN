@@ -81,8 +81,9 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
-void EXTI4_15_IRQHandler(void);
-void TIM21_IRQHandler(void);
+void EXTI2_3_IRQHandler(void);
+//void EXTI4_15_IRQHandler(void);
+//void TIM21_IRQHandler(void);
 
 #ifdef __cplusplus
 }

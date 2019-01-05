@@ -76,7 +76,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* UART handler declared in "main.c" file */
-
+//extern volatile uint8_t COUNT;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -223,6 +223,10 @@ void EXTI0_1_IRQHandler( void )
 
 void EXTI2_3_IRQHandler( void )
 {
+	/*if ( BSP_PB_GetState( BUTTON_USER ) ) {
+		BSP_LED_Toggle(LED_GREEN);
+		COUNT++;
+	}*/
 	HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_2 );
 
   HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_3 );

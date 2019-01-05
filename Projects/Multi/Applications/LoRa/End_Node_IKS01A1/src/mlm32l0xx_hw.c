@@ -137,6 +137,8 @@ void HW_Init( void )
     HW_RTC_Init( );
     
     vcom_Init( );
+		
+		//BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
     
     BSP_sensor_Init( );
     

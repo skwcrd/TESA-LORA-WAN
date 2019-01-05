@@ -212,6 +212,7 @@ void BSP_PB_Init(Button_TypeDef Button, ButtonMode_TypeDef ButtonMode)
     
     /* Enable and set Button EXTI Interrupt to the lowest priority */
 		NVIC_SetPriority( (IRQn_Type)(BUTTON_IRQn[Button]), 0x03 );
+		//HAL_NVIC_SetPriority( (IRQn_Type)(BUTTON_IRQn[Button]), 0, 0 );
     HAL_NVIC_EnableIRQ( (IRQn_Type)(BUTTON_IRQn[Button]) );
   }
 }

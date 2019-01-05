@@ -152,7 +152,7 @@ static void OnMagTimerEvent( void );
 
 /* Private variables ---------------------------------------------------------*/
 
-volatile uint8_t COUNT = 0;
+//volatile uint8_t COUNT = 0;
 
 extern SensorAxesRaw_t MAGNETO_Value_Raw;
 extern SensorAxesRaw_t ACCELERO_Value_Raw;
@@ -211,29 +211,29 @@ static  LoRaParam_t LoRaParamInit = { LORAWAN_ADR_STATE,
 int main( void )
 {
   /* STM32 HAL library initialization*/
-  HAL_Init();
+  HAL_Init( );
   
   /* Configure the system clock*/
-  SystemClock_Config();
+  SystemClock_Config( );
   
   /* Configure the debug mode*/
-  DBG_Init();
+  DBG_Init( );
   
   /* Configure the hardware*/
-  HW_Init();
+  HW_Init( );
   
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */
   
   /*Disbale Stand-by mode*/
-  LPM_SetOffMode(LPM_APPLI_Id , LPM_Disable );
+  LPM_SetOffMode( LPM_APPLI_Id, LPM_Disable );
   
   /* Configure the Lora Stack*/
-  LORA_Init( &LoRaMainCallbacks, &LoRaParamInit);
+  LORA_Init( &LoRaMainCallbacks, &LoRaParamInit );
   
   PRINTF("VERSION : %X\n\r", VERSION);
   
-  LORA_Join();
+  LORA_Join( );
   
   LoraStartTx( TX_ON_TIMER ) ;
   
@@ -247,7 +247,7 @@ int main( void )
     LPM_EnterLowPower( );
 #endif
 
-    ENABLE_IRQ();
+    ENABLE_IRQ( );
     
     /* USER CODE BEGIN 2 */
     /* USER CODE END 2 */
@@ -355,7 +355,7 @@ static void Send( void )
   }
   
   DBG_PRINTF("SEND REQUEST\n\r");
-	PRINTF("SEND REQUEST\n\r");
+	//PRINTF("SEND REQUEST\n\r");
 #ifndef CAYENNE_LPP
   int32_t latitude, longitude = 0;
   uint16_t altitudeGps = 0;
@@ -526,7 +526,7 @@ static void LORA_RxData( lora_AppData_t *AppData )
 {
   /* USER CODE BEGIN 4 */
   DBG_PRINTF("PACKET RECEIVED ON PORT %d\n\r", AppData->Port);
-	PRINTF("PACKET RECEIVED ON PORT %d\n\r", AppData->Port);
+	//PRINTF("PACKET RECEIVED ON PORT %d\n\r", AppData->Port);
 
   switch (AppData->Port)
   {
