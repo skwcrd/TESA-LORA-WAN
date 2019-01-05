@@ -271,7 +271,7 @@ void HW_RTC_setMcuWakeUpTime( void )
       
     McuWakeUpTime = (int16_t) ((now-hit));
     McuWakeUpTimeCal += McuWakeUpTime;
-    DBG_PRINTF("Cal=%d, %d\n\r",McuWakeUpTimeCal, McuWakeUpTime);
+    DBG_PRINTF("Cal = %d, %d\n\r",McuWakeUpTimeCal, McuWakeUpTime);
   }
 }
 

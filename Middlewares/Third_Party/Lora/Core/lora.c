@@ -280,10 +280,27 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
   
 #if( OVER_THE_AIR_ACTIVATION != 0 )
 
-  PRINTF("OTAA\n\r"); 
-  PRINTF("DevEui= %02X", DevEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", DevEui[i]); }; PRINTF("\n\r");
-  PRINTF("AppEui= %02X", AppEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", AppEui[i]); }; PRINTF("\n\r");
-  PRINTF("AppKey= %02X", AppKey[0]) ;for(int i=1; i<16; i++) {PRINTF(" %02X", AppKey[i]); }; PRINTF("\n\n\r");
+	//OTAA
+	PRINTF("OTAA\n\r");
+	//DevEui
+  PRINTF("DevEui = %02X", DevEui[0]);
+	for ( int i=1; i<8; i++ ) {
+		PRINTF("-%02X", DevEui[i]);
+	}
+	PRINTF("\n\r");
+	//AppEui
+  PRINTF("AppEui = %02X", AppEui[0]);
+	for ( int i=1; i<8; i++ ) {
+		PRINTF("-%02X", AppEui[i]);
+	}
+	PRINTF("\n\r");
+	//AppKey
+  PRINTF("AppKey = %02X", AppKey[0]);
+	for ( int i=1; i<16; i++ ) {
+		PRINTF(" %02X", AppKey[i]);
+	}
+	PRINTF("\n\n\r");
+	
 #else
 
 #if (STATIC_DEVICE_ADDRESS != 1)
@@ -292,11 +309,29 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
   // Choose a random device address
   DevAddr = randr( 0, 0x01FFFFFF );
 #endif
-  PRINTF("ABP\n\r"); 
-  PRINTF("DevEui= %02X", DevEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", DevEui[i]); }; PRINTF("\n\r");
-  PRINTF("DevAdd=  %08X\n\r", DevAddr) ;
-  PRINTF("NwkSKey= %02X", NwkSKey[0]) ;for(int i=1; i<16 ; i++) {PRINTF(" %02X", NwkSKey[i]); }; PRINTF("\n\r");
-  PRINTF("AppSKey= %02X", AppSKey[0]) ;for(int i=1; i<16 ; i++) {PRINTF(" %02X", AppSKey[i]); }; PRINTF("\n\r");
+  //ABP
+	PRINTF("ABP\n\r");
+	//DevEui
+  PRINTF("DevEui = %02X", DevEui[0]);
+	for ( int i=1; i<8; i++ ) {
+		PRINTF("-%02X", DevEui[i]);
+	}
+	PRINTF("\n\r");
+	//DevAdd
+  PRINTF("DevAdd =  %08X\n\r", DevAddr);
+	//NwkSKey
+  PRINTF("NwkSKey = %02X", NwkSKey[0]);
+	for ( int i=1; i<16; i++ ) {
+		PRINTF(" %02X", NwkSKey[i]);
+	}
+	PRINTF("\n\r");
+	//AppSKey
+  PRINTF("AppSKey = %02X", AppSKey[0]);
+	for ( int i=1; i<16; i++ ) {
+		PRINTF(" %02X", AppSKey[i]);
+	}
+	PRINTF("\n\r");
+	
 #endif
         LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
         LoRaMacPrimitives.MacMcpsIndication = McpsIndication;

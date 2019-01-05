@@ -125,6 +125,8 @@ void BSP_LED_Init(Led_TypeDef Led)
   
   /* Enable the GPIO_LED Clock */
   LEDx_GPIO_CLK_ENABLE( Led );
+	
+	BSP_LED_Off( Led );
 
   /* Configure the GPIO_LED pin */
   GPIO_InitStruct.Pin = LED_PIN[Led];
@@ -187,20 +189,20 @@ void BSP_PB_Init(Button_TypeDef Button, ButtonMode_TypeDef ButtonMode)
   GPIO_InitTypeDef GPIO_InitStruct;
   
   /* Enable the BUTTON Clock */
-  BUTTONx_GPIO_CLK_ENABLE(Button);
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
+  BUTTONx_GPIO_CLK_ENABLE( Button );
+  __HAL_RCC_SYSCFG_CLK_ENABLE( );
   
-  if(ButtonMode == BUTTON_MODE_GPIO)
+  if( ButtonMode == BUTTON_MODE_GPIO )
   {
     /* Configure Button pin as input */
     GPIO_InitStruct.Pin = BUTTON_PIN[Button];
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(BUTTON_PORT[Button], &GPIO_InitStruct);
+    HAL_GPIO_Init( BUTTON_PORT[Button], &GPIO_InitStruct );
   }
   
-  if(ButtonMode == BUTTON_MODE_EXTI)
+  if( ButtonMode == BUTTON_MODE_EXTI )
   {
     /* Configure Button pin as input with External interrupt */
     GPIO_InitStruct.Pin = BUTTON_PIN[Button];
@@ -209,8 +211,8 @@ void BSP_PB_Init(Button_TypeDef Button, ButtonMode_TypeDef ButtonMode)
     HAL_GPIO_Init(BUTTON_PORT[Button], &GPIO_InitStruct);
     
     /* Enable and set Button EXTI Interrupt to the lowest priority */
-    NVIC_SetPriority((IRQn_Type)(BUTTON_IRQn[Button]), 0x03);
-    HAL_NVIC_EnableIRQ((IRQn_Type)(BUTTON_IRQn[Button]));
+		NVIC_SetPriority( (IRQn_Type)(BUTTON_IRQn[Button]), 0x03 );
+    HAL_NVIC_EnableIRQ( (IRQn_Type)(BUTTON_IRQn[Button]) );
   }
 }
 

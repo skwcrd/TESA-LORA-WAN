@@ -151,6 +151,24 @@ static void OnTxTimerEvent( void );
 static void OnMagTimerEvent( void );
 
 /* Private variables ---------------------------------------------------------*/
+
+volatile uint8_t COUNT = 0;
+
+extern SensorAxesRaw_t MAGNETO_Value_Raw;
+extern SensorAxesRaw_t ACCELERO_Value_Raw;
+extern SensorAxes_t ACCELERO_Value;
+extern SensorAxes_t GYRO_Value;
+
+SensorAxesRaw_t MAG_MIN = { 0XFE64, 0XE43B, 0 };
+SensorAxesRaw_t MAG_MAX = { 0X1987, 0, 0X1774 };
+SensorAxesRaw_t MAGNETO_Value_Old 	= { 0, 0, 0 };
+SensorAxesRaw_t ACCELERO_Value_Old 	= { 0, 0, 0 };
+																			
+float HEADING;
+float TEMP_VALUE;
+float PRESSURE_VALUE;
+float HUMIDITY_VALUE;
+
 /* load Main call backs structure*/
 static LoRaMainCallback_t LoRaMainCallbacks = { HW_GetBatteryLevel,
                                                 HW_GetTemperatureLevel,
@@ -184,21 +202,7 @@ static  LoRaParam_t LoRaParamInit = { LORAWAN_ADR_STATE,
 																			LORAWAN_PUBLIC_NETWORK };
 
 /* Private functions ---------------------------------------------------------*/
-
-extern SensorAxesRaw_t MAGNETO_Value_Raw;
-extern SensorAxesRaw_t ACCELERO_Value_Raw;
-extern SensorAxes_t ACCELERO_Value;
-extern SensorAxes_t GYRO_Value;
-
-SensorAxesRaw_t MAG_MIN = { 0XFE64, 0XE43B, 0 };
-SensorAxesRaw_t MAG_MAX = { 0X1987, 0, 0X1774 };
-SensorAxesRaw_t MAGNETO_Value_Old 	= { 0, 0, 0 };
-SensorAxesRaw_t ACCELERO_Value_Old 	= { 0, 0, 0 };
 																			
-float HEADING;
-float TEMP_VALUE;
-float PRESSURE_VALUE;
-float HUMIDITY_VALUE;
 /**
   * @brief  Main program
   * @param  None
@@ -227,11 +231,11 @@ int main( void )
   /* Configure the Lora Stack*/
   LORA_Init( &LoRaMainCallbacks, &LoRaParamInit);
   
-  PRINTF("VERSION: %X\n\r", VERSION);
+  PRINTF("VERSION : %X\n\r", VERSION);
   
   LORA_Join();
   
-  LoraStartTx( TX_ON_TIMER) ;
+  LoraStartTx( TX_ON_TIMER ) ;
   
   while( 1 )
   {
@@ -263,6 +267,8 @@ static void Cal_Heading( void )
 	float MAG_X_Comp, MAG_Y_Comp, ACC_X_Norm, ACC_Y_Norm, pitch, roll;
 	SensorAxesRaw_t magnetos 	= { 0, 0, 0 };
 	SensorAxesRaw_t accelero 	= { 0, 0, 0 };
+	
+	//PRINTF("HEADING REQUEST\n\r");
 	
 	BSP_Magneto_sensor_Read();
 	
@@ -321,6 +327,9 @@ static void Cal_Heading( void )
 	else if ( ( HEADING < 180.0 ) && ( HEADING >= 0.0 ) ) {
 		HEADING = -( 180 - HEADING );
 	}
+	
+	//PRINTF("HEADING VALUE : %F\n\r", HEADING);
+	
 }
 
 static void Send( void )
@@ -346,6 +355,7 @@ static void Send( void )
   }
   
   DBG_PRINTF("SEND REQUEST\n\r");
+	PRINTF("SEND REQUEST\n\r");
 #ifndef CAYENNE_LPP
   int32_t latitude, longitude = 0;
   uint16_t altitudeGps = 0;
@@ -353,7 +363,7 @@ static void Send( void )
   
 #ifdef USE_B_L072Z_LRWAN1
   TimerInit( &TxLedTimer, OnTimerLedEvent );
-  TimerSetValue( &TxLedTimer, 200 );
+  TimerSetValue( &TxLedTimer, 1000 );
   LED_On( LED_RED1 );
   TimerStart( &TxLedTimer );
 #endif
@@ -516,6 +526,7 @@ static void LORA_RxData( lora_AppData_t *AppData )
 {
   /* USER CODE BEGIN 4 */
   DBG_PRINTF("PACKET RECEIVED ON PORT %d\n\r", AppData->Port);
+	PRINTF("PACKET RECEIVED ON PORT %d\n\r", AppData->Port);
 
   switch (AppData->Port)
   {
@@ -610,10 +621,10 @@ static void LoraStartTx( TxEventType_t EventType )
   {
     /* send everytime button is pushed */
     GPIO_InitTypeDef initStruct = { 0 };
-  
+		
+		initStruct.Pin		= USER_BUTTON_PIN;
     initStruct.Mode   = GPIO_MODE_IT_RISING;
-    initStruct.Pull   = GPIO_PULLUP;
-    initStruct.Speed  = GPIO_SPEED_HIGH;
+    initStruct.Pull   = GPIO_NOPULL;
 
     HW_GPIO_Init( USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, &initStruct );
     HW_GPIO_SetIrq( USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN, 0, Send );
