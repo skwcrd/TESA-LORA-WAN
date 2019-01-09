@@ -48,6 +48,7 @@
 #include "hw.h"
 #include "timeServer.h"
 #include "LoRaMac.h"
+#include "LoRaMacTest.h"
 #include "lora.h"
 #include "lora-test.h"
 #include "tiny_sscanf.h"
@@ -318,9 +319,9 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
   
 
   PRINTF("If OTAA enabled\n\r"); 
-  PRINTF("DevEui= %02X", lora_config.DevEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", lora_config.DevEui[i]); }; PRINTF("\n\r");
-  PRINTF("AppEui= %02X", lora_config.AppEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", lora_config.AppEui[i]); }; PRINTF("\n\r");
-  PRINTF("AppKey= %02X", lora_config.AppKey[0]) ;for(int i=1; i<16; i++) {PRINTF(" %02X", lora_config.AppKey[i]); }; PRINTF("\n\n\r");
+  PRINTF("DevEui = %02X", lora_config.DevEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", lora_config.DevEui[i]); }; PRINTF("\n\r");
+  PRINTF("AppEui = %02X", lora_config.AppEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", lora_config.AppEui[i]); }; PRINTF("\n\r");
+  PRINTF("AppKey = %02X", lora_config.AppKey[0]) ;for(int i=1; i<16; i++) {PRINTF(" %02X", lora_config.AppKey[i]); }; PRINTF("\n\n\r");
 
 #if (STATIC_DEVICE_ADDRESS != 1)
   // Random seed initialization
@@ -329,10 +330,10 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
   DevAddr = randr( 0, 0x01FFFFFF );
 #endif
   PRINTF("If ABP enabled\n\r"); 
-  PRINTF("DevEui= %02X", lora_config.DevEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", lora_config.DevEui[i]); }; PRINTF("\n\r");
-  PRINTF("DevAdd=  %08X\n\r", DevAddr) ;
-  PRINTF("NwkSKey= %02X", lora_config.NwkSKey[0]) ;for(int i=1; i<16 ; i++) {PRINTF(" %02X", lora_config.NwkSKey[i]); }; PRINTF("\n\r");
-  PRINTF("AppSKey= %02X", lora_config.AppSKey[0]) ;for(int i=1; i<16 ; i++) {PRINTF(" %02X", lora_config.AppSKey[i]); }; PRINTF("\n\r");
+  PRINTF("DevEui = %02X", lora_config.DevEui[0]) ;for(int i=1; i<8 ; i++) {PRINTF("-%02X", lora_config.DevEui[i]); }; PRINTF("\n\r");
+  PRINTF("DevAdd =  %08X\n\r", DevAddr) ;
+  PRINTF("NwkSKey = %02X", lora_config.NwkSKey[0]) ;for(int i=1; i<16 ; i++) {PRINTF(" %02X", lora_config.NwkSKey[i]); }; PRINTF("\n\r");
+  PRINTF("AppSKey = %02X", lora_config.AppSKey[0]) ;for(int i=1; i<16 ; i++) {PRINTF(" %02X", lora_config.AppSKey[i]); }; PRINTF("\n\r");
   LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
   LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
   LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;

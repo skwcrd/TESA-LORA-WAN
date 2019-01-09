@@ -108,9 +108,9 @@
  */
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64
 /*!
- * Defines the magneto data transmission duty cycle. 1s, value in [ms].
+ * Defines the magneto data transmission duty cycle. 500ms, value in [ms].
  */
-#define MAG_DUTYCYCLE                            		1000
+#define MAG_DUTYCYCLE                            		500
 /*!
  * User application data
  */
@@ -160,7 +160,7 @@ extern SensorAxes_t ACCELERO_Value;
 extern SensorAxes_t GYRO_Value;
 
 SensorAxesRaw_t MAG_MIN = { 0XFE64, 0XE43B, 0 };
-SensorAxesRaw_t MAG_MAX = { 0X1987, 0, 0X1774 };
+SensorAxesRaw_t MAG_MAX = { 0X1987, 0, 0X1848 };
 SensorAxesRaw_t MAGNETO_Value_Old 	= { 0, 0, 0 };
 SensorAxesRaw_t ACCELERO_Value_Old 	= { 0, 0, 0 };
 																			
