@@ -197,7 +197,7 @@ typedef struct sLoRaMainCallback
  *
  * @param [IN] None
  */
-    void ( *LORA_HasJoined)( void );
+    void ( *LORA_HasJoined )( void );
     /*!
  * @brief Confirms the class change 
  *
@@ -207,14 +207,14 @@ typedef struct sLoRaMainCallback
  *
  * @param [IN] length is the number of recieved bytes
  */
-    void ( *LORA_ConfirmClass) ( DeviceClass_t Class );
+    void ( *LORA_ConfirmClass ) ( DeviceClass_t Class );
     /*!
  * @brief callback indicating an uplink transmission is needed to allow
  *        a pending downlink transmission 
  *
  * @param [IN] None
  */
-    void ( *LORA_TxNeeded) ( void);
+    void ( *LORA_TxNeeded ) ( void);
 		
 } LoRaMainCallback_t;
 
@@ -229,14 +229,14 @@ typedef struct sLoRaMainCallback
  * @param [IN] application parmaters
  * @retval none
  */
-void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam );
+void LORA_Init ( LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam );
 
 /**
  * @brief run Lora classA state Machine 
  * @param [IN] none
  * @retval none
  */
-bool LORA_send(lora_AppData_t* AppData, LoraConfirm_t IsTxConfirmed);
+bool LORA_send( lora_AppData_t* AppData, LoraConfirm_t IsTxConfirmed );
 
 /**
  * @brief Join a Lora Network in classA
@@ -244,14 +244,14 @@ bool LORA_send(lora_AppData_t* AppData, LoraConfirm_t IsTxConfirmed);
  * @param [IN] none
  * @retval none
  */
-void LORA_Join( void);
+void LORA_Join( void );
 
 /**
  * @brief Check whether the Device is joined to the network
  * @param [IN] none
  * @retval returns LORA_SET if joined
  */
-LoraFlagStatus LORA_JoinStatus( void);
+LoraFlagStatus LORA_JoinStatus( void );
 
 /**
  * @brief change Lora Class

@@ -406,6 +406,17 @@ static const struct ATCommand_s ATCommand[] =
     .run = at_return_error,
   },
 
+  /*{
+    .string = AT_SENDTEMP,
+    .size_string = sizeof(AT_SENDTEMP) - 1,
+#ifndef NO_HELP
+    .help_string = "AT"AT_SENDTEMP ": Send value temperature data along with the application port\r\n",
+#endif
+    .get = at_return_error,
+    .set = at_SendTemp,
+    .run = at_return_error,
+  },*/
+
   {
     .string = AT_RECVB,
     .size_string = sizeof(AT_RECVB) - 1,

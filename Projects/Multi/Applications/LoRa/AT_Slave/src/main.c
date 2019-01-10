@@ -84,22 +84,57 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
  */
 #define ENABLE_FAST_WAKEUP
 
+/*!
+ * CAYENNE_LPP is myDevices Application server.
+ */
+#define CAYENNE_LPP
+#define LPP_DATATYPE_DIGITAL_INPUT  	0x0
+#define LPP_DATATYPE_TEMPERATURE    	0x67
+#define LPP_APP_PORT 									99
+
+/*!
+ * LoRaWAN default confirm state
+ */
+#define LORAWAN_DEFAULT_CONFIRM_MSG_STATE           LORAWAN_UNCONFIRMED_MSG
+
+/*!
+ * LoRaWAN default endNode class port
+ */
+#define LORAWAN_DEFAULT_CLASS                       CLASS_A
+
+/*!
+ * User application data buffer size
+ */
+#define LORAWAN_APP_DATA_BUFF_SIZE                           64
+
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-
-
-
+static void Send( void );
+/* start the tx process*/
+static void LoraStartTx( void );
+/* tx timer callback function*/
+static void OnTxTimerEvent( void );
 /* call back when LoRa has received a frame*/
 static void LoraRxData(lora_AppData_t *AppData);
 /* call back when LoRa endNode has just joined*/
 static void LORA_HasJoined( void );
 /* call back when LoRa endNode has just switch the class*/
 static void LORA_ConfirmClass ( DeviceClass_t Class );
-
 /* call back when server needs endNode to send a frame*/
 static void LORA_TxNeeded ( void );
 	
 /* Private variables ---------------------------------------------------------*/
+static TimerEvent_t TxTimer;
+/*!
+ * User application data
+ */
+static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
+
+/*!
+ * User application data structure
+ */
+static lora_AppData_t AppData = { AppDataBuff,  0 ,0 };
+
 /* load call backs*/
 static LoRaMainCallback_t LoRaMainCallbacks = { HW_GetBatteryLevel,
                                                 HW_GetTemperatureLevel,
@@ -108,14 +143,14 @@ static LoRaMainCallback_t LoRaMainCallbacks = { HW_GetBatteryLevel,
                                                 LoraRxData,
                                                 LORA_HasJoined,
                                                 LORA_ConfirmClass,
-                                                LORA_TxNeeded};
+                                                LORA_TxNeeded };
 
 /**
  * Initialises the Lora Parameters
  */
-static LoRaParam_t LoRaParamInit = {LORAWAN_ADR_ON,
-                                    DR_0,
-                                    LORAWAN_PUBLIC_NETWORK};
+static LoRaParam_t LoRaParamInit = { 	LORAWAN_ADR_ON,
+																			DR_0,
+																			LORAWAN_PUBLIC_NETWORK };
 
                                     
                                     
@@ -197,11 +232,12 @@ int main( void )
 
   /* Configure the Lora Stack*/
   LORA_Init(&LoRaMainCallbacks, &LoRaParamInit);
-
+	
+	LoraStartTx( );
   /* main loop*/
   while (1)
   {
-    /* Handle UART commands */
+		/* Handle UART commands */
     CMD_Process();
     /*
      * low power section
@@ -225,6 +261,54 @@ int main( void )
   }
 }
 
+static void Send( void )
+{
+  int16_t 	temperature = 0;
+  
+  while ( LORA_JoinStatus () != LORA_SET)
+  {
+    /*Not joined, try again later*/
+    LORA_Join();
+  }
+	float TEMP_VALUE = 25.76;
+
+#ifdef CAYENNE_LPP
+  uint8_t cchannel=0;
+  temperature 			= ( int16_t )( TEMP_VALUE * 10 );
+  uint32_t i = 0;
+	
+  AppData.Port = LPP_APP_PORT;
+	
+	// TEMPERATURE SENSOR
+  AppData.Buff[i++] = cchannel++;
+  AppData.Buff[i++] = LPP_DATATYPE_TEMPERATURE; 
+  AppData.Buff[i++] = ( temperature >> 8 ) & 0xFF;
+  AppData.Buff[i++] = temperature & 0xFF;
+  AppData.Buff[i++] = cchannel++;
+  AppData.Buff[i++] = LPP_DATATYPE_DIGITAL_INPUT; 
+  AppData.Buff[i++] = 37;
+#endif  /* CAYENNE_LPP */
+  AppData.BuffSize = i;
+  
+  LORA_send( &AppData, LORAWAN_DEFAULT_CONFIRM_MSG_STATE);
+  
+  /* USER CODE END 3 */
+}
+
+static void OnTxTimerEvent( void )
+{
+  Send( );
+  /*Wait for next tx slot*/
+  TimerStart( &TxTimer );
+}
+
+static void LoraStartTx( void )
+{
+	/* send everytime timer elapses */
+	TimerInit( &TxTimer, OnTxTimerEvent );
+	TimerSetValue( &TxTimer, 30000 );
+	OnTxTimerEvent( );
+}
 
 static void LoraRxData(lora_AppData_t *AppData)
 {
@@ -243,6 +327,7 @@ static void LORA_HasJoined( void )
 #if( OVER_THE_AIR_ACTIVATION != 0 )
   PRINTF("JOINED\n\r");
 #endif
+	LORA_RequestClass( LORAWAN_DEFAULT_CLASS );
 }
 
 static void LORA_ConfirmClass ( DeviceClass_t Class )

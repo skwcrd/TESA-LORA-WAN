@@ -106,6 +106,7 @@ typedef enum eATEerror
 #define AT_NJS        "+NJS"
 #define AT_SENDB      "+SENDB"
 #define AT_SEND       "+SEND"
+//#define AT_SENDTEMP   "+SENDT"
 #define AT_RECVB      "+RECVB"
 #define AT_RECV       "+RECV"
 #define AT_VER        "+VER"
@@ -483,6 +484,13 @@ ATEerror_t at_SendBinary(const char *param);
  * @retval AT_OK if OK, or an appropriate AT_xxx error code
  */
 ATEerror_t at_Send(const char *param);
+
+/**
+ * @brief  Print last received message
+ * @param  String parameter
+ * @retval AT_OK if OK, or an appropriate AT_xxx error code
+ */
+//ATEerror_t at_SendTemp(const char *param);
 
 /**
  * @brief  Print last received data in binary format with hexadecimal value

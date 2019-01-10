@@ -62,6 +62,13 @@
 /* External variables --------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+/*!
+ * CAYENNE_LPP is myDevices Application server.
+ */
+/*#define CAYENNE_LPP
+#define LPP_DATATYPE_DIGITAL_INPUT  	0x0
+#define LPP_DATATYPE_TEMPERATURE    	0x67
+#define LPP_APP_PORT 									99*/
 /**
  * @brief Max size of the data that can be received
  */
@@ -839,8 +846,8 @@ ATEerror_t at_NetworkJoinStatus(const char *param)
 ATEerror_t at_SendBinary(const char *param)
 {
   LoraErrorStatus status;
-  const char *buf= param;
-  unsigned char bufSize= strlen(param);
+  const char *buf = param;
+  unsigned char bufSize = strlen(param);
   uint32_t appPort;
   unsigned size=0;
   char hex[3];
@@ -906,8 +913,8 @@ ATEerror_t at_SendBinary(const char *param)
 ATEerror_t at_Send(const char *param)
 {
   LoraErrorStatus status;
-  const char *buf= param;
-  unsigned char bufSize= strlen(param);
+  const char *buf = param;
+  unsigned char bufSize = strlen(param);
   uint32_t appPort;
   
     /* read and set the application port */
@@ -955,6 +962,51 @@ ATEerror_t at_Send(const char *param)
     return AT_ERROR;
   }
 }
+
+/*ATEerror_t at_SendTemp(const char *param)
+{
+  LoraErrorStatus status;
+  const char *buf = param;
+  unsigned char bufSize = strlen(param);
+	float temperature = 0;
+	
+	temperature = atof(buf);
+	
+#ifdef CAYENNE_LPP
+  uint8_t cchannel = 0;
+  uint32_t i = 0;
+	int16_t temp = ( int16_t )( temperature * 10 );
+
+  AppData.Port = LPP_APP_PORT;
+	
+	// TEMPERATURE
+  AppData.Buff[i++] = cchannel++;
+  AppData.Buff[i++] = LPP_DATATYPE_TEMPERATURE;
+  AppData.Buff[i++] = ( temp >> 8 ) & 0xFF;
+  AppData.Buff[i++] = temp & 0xFF;
+	
+	AppData.Buff[i++] = cchannel++;
+  AppData.Buff[i++] = LPP_DATATYPE_DIGITAL_INPUT;
+  AppData.Buff[i++] = 37;
+#endif*/  /* CAYENNE_LPP */ /*
+  
+  if (bufSize > LORAWAN_APP_DATA_BUFF_SIZE)
+  {
+    bufSize = LORAWAN_APP_DATA_BUFF_SIZE;
+  }
+  AppData.BuffSize = i;
+  
+  status = LORA_send( &AppData, lora_config_reqack_get() );
+  
+  if (status == LORA_SUCCESS)
+  {
+    return AT_OK;
+  }
+  else
+  {
+    return AT_ERROR;
+  }
+}*/
 
 ATEerror_t at_ReceiveBinary(const char *param)
 {
